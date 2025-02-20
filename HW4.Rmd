@@ -1,7 +1,6 @@
 ---
 title: "Homework 4"
 author: "Advik Ravichandran"
-UTEID: "asr3897"
 date: "February 20th, 2025"
 output:
   pdf_document:
@@ -14,6 +13,8 @@ output:
     number_sections: false
     theme: journal
 ---
+
+**UTEID:** asr3897
 
 **Github Link:** <https://github.com/advikr/Homework4>
 
@@ -56,9 +57,9 @@ p_value_restaurants <- sum(sim_restaurants >= 8) / 100000
 p_value_restaurants
 ```
 
-**P-Value:** The p-value calculated was `r p_value_restauarants` .
+**P-Value:** The p-value calculated was `r p_value_restaurants`.
 
-**Conclusion:** Since the p-value, `r p_value` , is less than 0.05, this means that the results shown in the simulation is statistically significant, which means that the null hypothesis is rejected, so Gourmet Bites restaurants are cited at a higher rate for health code violations than the 3% baseline rate.
+**Conclusion:** Since the p-value, `r p_value_restaurants`, is less than 0.05, this means that the results shown in the simulation is statistically significant, which means that the null hypothesis is rejected, so Gourmet Bites restaurants are cited at a higher rate for health code violations than the 3% baseline rate.
 
 # Problem 3
 
