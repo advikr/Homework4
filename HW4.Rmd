@@ -27,21 +27,26 @@ library(mosaic)
 library(tidyverse)
 ```
 
-**Null Hypothesis:** Are securities trades from the Iron Bank are flagged at the same 2.4% baseline rate as that of other traders?
+**Null Hypothesis:** Securities trades from the Iron Bank are flagged at the same 2.4% baseline rate as that of other traders.
 
-**Test Statistic:** The test statistic used to determine if the null hypothesis is true or not was 70 observed flagged trades.
+**Test Statistic:** The test statistic used was the 70 observed flagged trades out of the 2021 observed trades.
 
 ```{r echo = FALSE, warning = FALSE}
 sim_sec = do(100000)*nflip(n=2021, prob=0.024)
 ggplot(sim_sec) + 
-  geom_histogram(aes(x=nflip), binwidth=1)
+  geom_histogram(aes(x=nflip), binwidth=1) + 
+  labs(
+    x = "Number of Observed Flagged Trades",
+    y = "Frequency in Each Simulation",
+    title = "Distribution of the Number of Flagged Trades"
+  )
 p_value_sec <- sum(sim_sec >= 70) / 100000
 p_value_sec
 ```
 
 **P-Value:** The p-value calculated was `r p_value_sec` .
 
-**Conclusion:** Since the p-value, `r p_value_sec` , is less than 0.05, this means that the results shown in the simulation is statistically significant, which means that the null hypothesis is rejected, so the securities trades from the Iron Bank are flagged at a higher rare than the 2.4% baseline rate.
+**Conclusion:** Since the p-value, `r p_value_sec` , is less than 0.05, this means that the results shown in the simulation is statistically significant, which means that the null hypothesis is rejected, so the securities trades from the Iron Bank are flagged at a higher rate than the 2.4% baseline rate.
 
 # Problem 2
 
@@ -52,7 +57,12 @@ p_value_sec
 ```{r echo = FALSE, warning = FALSE}
 sim_restaurants = do(100000)*nflip(n=50, prob=0.03)
 ggplot(sim_restaurants) + 
-  geom_histogram(aes(x=nflip), binwidth=1)
+  geom_histogram(aes(x=nflip), binwidth=1) + 
+  labs(
+    x = "Number of Health Code Violations",
+    y = "Frequency in Each Simulation",
+    title = "Distribution of Health Code Violations for Gourmet Bites"
+  )
 p_value_restaurants <- sum(sim_restaurants >= 8) / 100000
 p_value_restaurants
 ```
@@ -63,9 +73,9 @@ p_value_restaurants
 
 # Problem 3
 
-**Null Hypothesis (H0):** The distribution of the jurors empaneled by the judge is the same(not statistically different) as the county's population proportions.
+**Null Hypothesis (H0):** The distribution of the jurors empaneled by the judge is the proportionate as the county's population proportions.
 
-**Test Statistic (T):** The test statistic used for this problem was the chi squared test.
+**Test Statistic (T):** The test statistic used for this problem was the chi squared goodness of fit test.
 
 ```{r echo = FALSE, warning = FALSE}
 expected_distribution <- c(Group1 = .3, Group2 = .25, Group3 = .20, Group4 = .15, Group5 = .1)
@@ -74,16 +84,13 @@ sum(observed_counts)
 
 tibble(observed = observed_counts, expected = expected_distribution*240)
 
-# "multinomial sampling" equals sampling from a named set of categories
-num_jurors = 240  # how many M&Ms per bag?
+num_jurors = 240  
 simulated_counts = rmultinom(1, num_jurors, expected_distribution)
 
 
-# compare "actual" with expected counts
 simulated_counts - num_jurors*expected_distribution
 
 
-# Define a function to calculate the chi-squared statistic
 chi_squared_statistic = function(observed, expected) {
   sum((observed - expected)^2 / expected)
 }
@@ -91,30 +98,33 @@ chi_squared_statistic = function(observed, expected) {
 chi2 = chi_squared_statistic(simulated_counts, num_jurors*expected_distribution)
 chi2
 
-# Let's repeat this:
 num_simulations = 10000
 chi2_sim = do(num_simulations)*{
   simulated_counts = rmultinom(1, num_jurors, expected_distribution)
   this_chi2 = chi_squared_statistic(simulated_counts, num_jurors*expected_distribution)
-  c(chi2 = this_chi2) # return a vector with names and values
+  c(chi2 = this_chi2) 
 }
 
 ggplot(chi2_sim) + 
-  geom_histogram(aes(x=chi2))
+  geom_histogram(aes(x=chi2)) + 
+  labs(
+    x = "Chi-Squared Values",
+    y = "Frequency",
+    title = "Distribution of Chi-Squared Values for Jury Simulation"
+  )
 
 
-# my crazy bag
 my_chi2 = chi_squared_statistic(observed_counts, num_jurors*expected_distribution)
 my_chi2
 
-# p value
+
 chi2_sim %>%
   summarize(count(chi2 >= 12.42639)/n())
 ```
 
-**P-Value (P):** The p-value calculated using the chi-squared test is 0.0129.
+**P-Value (P):** The p-value calculated using the chi-squared test is 0.0136.
 
-**Conclusion:** Since the p-value, 0.0129, is less than 0.05, we fail to reject the null hypothesis, meaning that the distribution of jurors empaneled by the judge is the same(not statistically different) as the county's population proportions.
+**Conclusion:** Since the p-value, 0.0136, is less than 0.05, we reject the null hypothesis, meaning that the distribution of jurors empaneled by the judge is not proportionate to the county's population proportions.
 
 # Problem 4
 
