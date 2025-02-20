@@ -1,0 +1,193 @@
+---
+title: "Homework 4"
+author: "Advik Ravichandran"
+UTEID: "asr3897"
+date: "February 20th, 2025"
+output:
+  pdf_document:
+    toc: false
+    toc_depth: '3'
+  html_document:
+    toc: false
+    toc_float: false
+    toc_depth: 3
+    number_sections: false
+    theme: journal
+---
+
+**Github Link:** <https://github.com/advikr/Homework4>
+
+# Problem 1
+
+```{r echo = FALSE, warning = FALSE, results = 'hide', message = FALSE}
+library(ggplot2)
+library(knitr)
+library(mosaic)
+library(tidyverse)
+```
+
+**Null Hypothesis:** Are securities trades from the Iron Bank are flagged at the same 2.4% baseline rate as that of other traders?
+
+**Test Statistic:** The test statistic used to determine if the null hypothesis is true or not was 70 observed flagged trades.
+
+```{r echo = FALSE, warning = FALSE}
+sim_sec = do(100000)*nflip(n=2021, prob=0.024)
+ggplot(sim_sec) + 
+  geom_histogram(aes(x=nflip), binwidth=1)
+p_value_sec <- sum(sim_sec >= 70) / 100000
+p_value_sec
+```
+
+**P-Value:** The p-value calculated was `r p_value_sec` .
+
+**Conclusion:** Since the p-value, `r p_value_sec` , is less than 0.05, this means that the results shown in the simulation is statistically significant, which means that the null hypothesis is rejected, so the securities trades from the Iron Bank are flagged at a higher rare than the 2.4% baseline rate.
+
+# Problem 2
+
+**Null Hypothesis:** Gourmet Bites restaurants in the city are cited for health code violations at the same 3% baseline rate.
+
+**Test Statistic:** The test statistic used to determine if the null hypothesis is true or not was 8 observed restaurants with health inspection violations.
+
+```{r echo = FALSE, warning = FALSE}
+sim_restaurants = do(100000)*nflip(n=50, prob=0.03)
+ggplot(sim_restaurants) + 
+  geom_histogram(aes(x=nflip), binwidth=1)
+p_value_restaurants <- sum(sim_restaurants >= 8) / 100000
+p_value_restaurants
+```
+
+**P-Value:** The p-value calculated was `r p_value_restauarants` .
+
+**Conclusion:** Since the p-value, `r p_value` , is less than 0.05, this means that the results shown in the simulation is statistically significant, which means that the null hypothesis is rejected, so Gourmet Bites restaurants are cited at a higher rate for health code violations than the 3% baseline rate.
+
+# Problem 3
+
+**Null Hypothesis (H0):** The distribution of the jurors empaneled by the judge is the same(not statistically different) as the county's population proportions.
+
+**Test Statistic (T):** The test statistic used for this problem was the chi squared test.
+
+```{r echo = FALSE, warning = FALSE}
+expected_distribution <- c(Group1 = .3, Group2 = .25, Group3 = .20, Group4 = .15, Group5 = .1)
+observed_counts <- c(Group1 = 85, Group2 = 56, Group3 = 59, Group4 = 27, Group5 = 13)
+sum(observed_counts)
+
+tibble(observed = observed_counts, expected = expected_distribution*240)
+
+# "multinomial sampling" equals sampling from a named set of categories
+num_jurors = 240  # how many M&Ms per bag?
+simulated_counts = rmultinom(1, num_jurors, expected_distribution)
+
+
+# compare "actual" with expected counts
+simulated_counts - num_jurors*expected_distribution
+
+
+# Define a function to calculate the chi-squared statistic
+chi_squared_statistic = function(observed, expected) {
+  sum((observed - expected)^2 / expected)
+}
+
+chi2 = chi_squared_statistic(simulated_counts, num_jurors*expected_distribution)
+chi2
+
+# Let's repeat this:
+num_simulations = 10000
+chi2_sim = do(num_simulations)*{
+  simulated_counts = rmultinom(1, num_jurors, expected_distribution)
+  this_chi2 = chi_squared_statistic(simulated_counts, num_jurors*expected_distribution)
+  c(chi2 = this_chi2) # return a vector with names and values
+}
+
+ggplot(chi2_sim) + 
+  geom_histogram(aes(x=chi2))
+
+
+# my crazy bag
+my_chi2 = chi_squared_statistic(observed_counts, num_jurors*expected_distribution)
+my_chi2
+
+# p value
+chi2_sim %>%
+  summarize(count(chi2 >= 12.42639)/n())
+```
+
+**P-Value (P):** The p-value calculated using the chi-squared test is 0.0129.
+
+**Conclusion:** Since the p-value, 0.0129, is less than 0.05, we fail to reject the null hypothesis, meaning that the distribution of jurors empaneled by the judge is the same(not statistically different) as the county's population proportions.
+
+# Problem 4
+
+### Part A
+
+```{r echo = FALSE, warning = FALSE}
+sentences <- readLines("brown_sentences.txt")
+
+clean_txt = function(text, freq_table) {
+  
+  clean_text = gsub("[^A-Za-z] ", "", text)
+  clean_text = toupper(clean_text)
+  observed_counts = table(factor(strsplit(clean_text, "")[[1]], levels = freq_table$Letter))
+  total_letters = sum(observed_counts)
+  expected_counts = total_letters * freq_table$Probability
+  chi_squared_stat = sum((observed_counts - expected_counts)^2 / expected_counts)
+  return(chi_squared_stat)
+
+
+}
+
+letter_frequencies = read.csv("letter_frequencies.csv")
+
+letter_frequencies$Probability = letter_frequencies$Probability / sum(letter_frequencies$Probability)
+
+chi_values <- sapply(sentences, clean_txt, freq_table = letter_frequencies)
+
+ggplot() + geom_histogram(aes(x = chi_values)) + 
+  labs(
+    x = "Chi-Squared Values",
+    y = "Count",
+    title = "Distribution of Chi-Squared Values for Each Sentence"
+  )
+
+
+
+
+
+
+
+```
+
+### Part B
+
+```{r echo = FALSE, warning = FALSE}
+sentences <- c(
+  "She opened the book and started to read the first chapter, eagerly anticipating what might come next.",
+  "Despite the heavy rain, they decided to go for a long walk in the park, crossing the main avenue by the fountain in the center.",
+  "The museum's new exhibit features ancient artifacts from various civilizations around the world.",
+  "He carefully examined the document, looking for any clues that might help solve the mystery.",
+  "The students gathered in the auditorium to listen to the guest speaker's inspiring lecture.",
+  "Feeling vexed after an arduous and zany day at work, she hoped for a peaceful and quiet evening at home, cozying up after a quick dinner with some TV, or maybe a book on her upcoming visit to Auckland.",
+  "The chef demonstrated how to prepare a delicious meal using only locally sourced ingredients, focusing mainly on some excellent dinner recipes from Spain.",
+  "They watched the sunset from the hilltop, marveling at the beautiful array of colors in the sky.",
+  "The committee reviewed the proposal and provided many points of useful feedback to improve the project's effectiveness.",
+  "Despite the challenges faced during the project, the team worked tirelessly to ensure its successful completion, resulting in a product that exceeded everyone's expectations."
+)
+
+sentences_chi <- sapply(sentences, clean_txt, freq_table = letter_frequencies)
+
+p_values <- sapply(sentences_chi, function(x){
+  sum(chi_values > x) / (length(chi_values))
+})
+
+results <- data.frame(
+  Sentence <- 1:length(sentences),
+  Chi_Squared <- sentences_chi,
+  P_Values <- round(p_values, 3)
+)
+
+results <- setNames(results, c("Sentence", "Chi-Squared", "P-value"))
+kable(results, row.names = FALSE)
+```
+
+**Null Hypothesis (H0):** The sentence follows the typical English letter distribution, thus not AI generated.
+
+**Conclusion:** Sentence 6 is produced by a LLM because its p-value, 0.009, is less than 0.05, thus rejecting the null hypothesis. This means that the sentence does not follow the typical English letter distribution, thus it is AI generated.
